@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Mundos Planetas Animados Interactivos</title>
+<style>
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #00111f 0%, #002b4f 100%);
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 600px;
+    max-width: 350px;
+    overflow-x: hidden;
+    user-select: none;
+    position: relative;
+  }
+
+  h1 {
+    margin: 20px 0 10px 0;
+    font-weight: 900;
+    font-size: 1.8rem;
+    text-align: center;
+    letter-spacing: 2px;
+    color: #a1d4ff;
+    z-index: 10;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  /* Planet world container for each section */
+  .planet-world {
+    position: relative;
+    margin: auto;
+    width: 320px;
+    height: 120px;
+    display: flex;
+    justify-content: space-around;
+    cursor: pointer;
+    transition: filter 0.3s ease;
+    z-index: 1;
+  }
+
+  /* Darken or blur when another planet is expanded */
+  body.expanded .planet-world:not(.expanded) {
+    filter: brightness(0.5);
+    pointer-events: none;
+  }
+
+  /* Each world: planet main circle */
+  .planet {
+    position: relative;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: rotatePlanet 20s linear infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    filter: drop-shadow(0 0 4px rgba(0,0,0,0.9));
+  }
+
+  /* Common planet sizes */
+  .planet.size1 {
+    width: 110px;
+    height: 110px;
+  }
+  .planet.size2 {
+    width: 90px;
+    height: 90px;
+  }
+  .planet.size3 {
+    width: 100px;
+    height: 100px;
+  }
+  .planet.size4 {
+    width: 95px;
+    height: 95px;
+  }
+  .planet.size5 {
+    width: 85px;
+    height: 85px;
+  }
+
+  /* Different planet colors */
+  .planet.world1 {
+    background: radial-gradient(circle at center, #ffb347, #ffcc33);
+    box-shadow: 0 0 18px #ffc300aa;
+  }
+  .planet.world2 {
+    background: radial-gradient(circle at center, #6fb3ff, #0055ff);
+    box-shadow: 0 0 20px #2a57ffcc;
+  }
+  .planet.world3 {
+    background: radial-gradient(circle at center, #ff6f91, #be264c);
+    box-shadow: 0 0 22px #e60039cc;
+  }
+  .planet.world4 {
+    background: radial-gradient(circle at center, #a6ffb0, #3aff3b);
+    box-shadow: 0 0 18px #27c927cc;
+  }
+  .planet.world5 {
+    background: radial-gradient(circle at center, #ff6ffc, #a733ff);
+    box-shadow: 0 0 20px #8a24ffcc;
+  }
+
+  /* Subdivision orbit container */
+  .orbits {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Individual orbit ring */
+  .orbit {
+    position: absolute;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+  }
+
+  /* Each orbit ring size (relative to planet) */
+  .orbit.r1 {
+    width: 35px;
+    height: 35px;
+    top: 50%;
+    left: 50%;
+    margin-left: -17.5px;
+    margin-top: -17.5px;
+    animation-name: orbitRotate;
+    animation-duration: 10s;
+  }
+  .orbit.r2 {
+    width: 50px;
+    height: 50px;
+    top: 50%;
+    left: 50%;
+    margin-left: -25px;
+    margin-top: -25px;
+    animation-name: orbitRotateRev;
+    animation-duration: 15s;
+  }
+  .orbit.r3 {
+    width: 65px;
+    height: 65px;
+    top: 50%;
+    left: 50%;
+    margin-left: -32.5px;
+    margin-top: -32.5px;
+    animation-name: orbitRotate;
+    animation-duration: 22s;
+  }
+
+  /* Orbiting small subdivision planets */
+  .subdivision {
+    position: absolute;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    box-shadow: 0 0 8px #fff;
+    top: 50%;
+    left: 50%;
+    margin-top: -6px;
+    margin-left: -6px;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  /* Different colors for subdivisions by world */
+  .world1 .subdivision {
+    background: #fff7d7;
+    box-shadow: 0 0 8px #fff7d7;
+  }
+  .world2 .subdivision {
+    background: #99d9ff;
+    box-shadow: 0 0 8px #99d9ff;
+  }
+  .world3 .subdivision {
+    background: #ff9cb0;
+    box-shadow: 0 0 8px #ff9cb0;
+  }
+  .world4 .subdivision {
+    background: #b8ffb2;
+    box-shadow: 0 0 8px #b8ffb2;
+  }
+  .world5 .subdivision {
+    background: #d489ff;
+    box-shadow: 0 0 8px #d489ff;
+  }
+
+  /* Positions of subdivisions on the orbits */
+  /* they will rotate around the planet with the orbit */
+
+  /* Orbit 1 subdivisions orbit */
+  .world1 .orbit.r1 .subdivision {
+    animation-name: orbiting1;
+    animation-duration: 10s;
+  }
+  .world2 .orbit.r1 .subdivision {
+    animation-name: orbiting2;
+    animation-duration: 12s;
+  }
+  .world3 .orbit.r1 .subdivision {
+    animation-name: orbiting3;
+    animation-duration: 14s;
+  }
+  .world4 .orbit.r1 .subdivision {
+    animation-name: orbiting4;
+    animation-duration: 16s;
+  }
+  .world5 .orbit.r1 .subdivision {
+    animation-name: orbiting5;
+    animation-duration: 18s;
+  }
+
+  /* Orbit 2 subdivisions orbit */
+  .world1 .orbit.r2 .subdivision {
+    animation-name: orbiting6;
+    animation-duration: 20s;
+  }
+  .world2 .orbit.r2 .subdivision {
+    animation-name: orbiting7;
+    animation-duration: 22s;
+  }
+  .world3 .orbit.r2 .subdivision {
+    animation-name: orbiting8;
+    animation-duration: 24s;
+  }
+  .world4 .orbit.r2 .subdivision {
+    animation-name: orbiting9;
+    animation-duration: 26s;
+  }
+  .world5 .orbit.r2 .subdivision {
+    animation-name: orbiting10;
+    animation-duration: 28s;
+  }
+
+  /* Orbit 3 subdivisions orbit */
+  .world1 .orbit.r3 .subdivision {
+    animation-name: orbiting11;
+    animation-duration: 30s;
+  }
+  .world2 .orbit.r3 .subdivision {
+    animation-name: orbiting12;
+    animation-duration: 32s;
+  }
+  .world3 .orbit.r3 .subdivision {
+    animation-name: orbiting13;
+    animation-duration: 34s;
+  }
+  .world4 .orbit.r3 .subdivision {
+    animation-name: orbiting14;
+    animation-duration: 36s;
+  }
+  .world5 .orbit.r3 .subdivision {
+    animation-name: orbiting15;
+    animation-duration: 38s;
+  }
+
+  /* Animations */
+
+  @keyframes rotatePlanet {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes orbitRotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes orbitRotateRev {
+    0% {
+      transform: rotate(360deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
+
+  /* Subdivision orbiting animations - circular orbit offset by degrees */
+  @keyframes orbiting1 {
+    0% { transform: rotate(0deg) translateX(17.5px) rotate(0deg);}
+    100% { transform: rotate(360deg) translateX(17.5px) rotate(-360deg);}
+  }
+  @keyframes orbiting2 {
+    0% { transform: rotate(45deg) translateX(17.5px) rotate(-45deg);}
+    100% { transform: rotate(405deg) translateX(17.5px) rotate(-405deg);}
+  }
+  @keyframes orbiting3 {
+    0% { transform: rotate(90deg) translateX(17.5px) rotate(-90deg);}
+    100% { transform: rotate(450deg) translateX(17.5px) rotate(-450deg);}
+  }
+  @keyframes orbiting4 {
+    0% { transform: rotate(135deg) translateX(17.5px) rotate(-135deg);}
+    100% { transform: rotate(495deg) translateX(17.5px) rotate(-495deg);}
+  }
+  @keyframes orbiting5 {
+    0% { transform: rotate(180deg) translateX(17.5px) rotate(-180deg);}
+    100% { transform: rotate(540deg) translateX(17.5px) rotate(-540deg);}
+  }
+
+  @keyframes orbiting6 {
+    0% { transform: rotate(0deg) translateX(25px) rotate(0deg);}
+    100% { transform: rotate(360deg) translateX(25px) rotate(-360deg);}
+  }
+  @keyframes orbiting7 {
+    0% { transform: rotate(60deg) translateX(25px) rotate(-60deg);}
+    100% { transform: rotate(420deg) translateX(25px) rotate(-420deg);}
+  }
+  @keyframes orbiting8 {
+    0% { transform: rotate(120deg) translateX(25px) rotate(-120deg);}
+    100% { transform: rotate(480deg) translateX(25px) rotate(-480deg);}
+  }
+  @keyframes orbiting9 {
+    0% { transform: rotate(180deg) translateX(25px) rotate(-180deg);}
+    100% { transform: rotate(540deg) translateX(25px) rotate(-540deg);}
+  }
+  @keyframes orbiting10 {
+    0% { transform: rotate(240deg) translateX(25px) rotate(-240deg);}
+    100% { transform: rotate(600deg) translateX(25px) rotate(-600deg);}
+  }
+
+  @keyframes orbiting11 {
+    0% { transform: rotate(0deg) translateX(32.5px) rotate(0deg);}
+    100% { transform: rotate(360deg) translateX(32.5px) rotate(-360deg);}
+  }
+  @keyframes orbiting12 {
+    0% { transform: rotate(72deg) translateX(32.5px) rotate(-72deg);}
+    100% { transform: rotate(432deg) translateX(32.5px) rotate(-432deg);}
+  }
+  @keyframes orbiting13 {
+    0% { transform: rotate(144deg) translateX(32.5px) rotate(-144deg);}
+    100% { transform: rotate(504deg) translateX(32.5px) rotate(-504deg);}
+  }
+  @keyframes orbiting14 {
+    0% { transform: rotate(216deg) translateX(32.5px) rotate(-216deg);}
+    100% { transform: rotate(576deg) translateX(32.5px) rotate(-576deg);}
+  }
+  @keyframes orbiting15 {
+    0% { transform: rotate(288deg) translateX(32.5px) rotate(-288deg);}
+    100% { transform: rotate(648deg) translateX(32.5px) rotate(-648deg);}
+  }
+
+  /* Tooltip styling for subdivisions */
+  .subdivision:hover::after {
+    content: attr(data-info);
+    position: absolute;
+    bottom: 140%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.85);
+    color: #000;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+  }
+  .subdivision:hover::after {
+    opacity: 1;
+  }
+
+  /* Section titles above the row of planets */
+  .world-title {
+    position: absolute;
+    top: -28px;
+    width: 100%;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #ccc;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 360px) {
+    .planet-world {
+      width: 290px;
+      height: 110px;
+    }
+    .planet.size1 { width: 95px; height: 95px; }
+    .planet.size2 { width: 75px; height: 75px; }
+    .planet.size3 { width: 85px; height: 85px; }
+    .planet.size4 { width: 80px; height: 80px; }
+    .planet.size5 { width: 70px; height: 70px; }
+  }
+
+  /* Expanded planet overlay wrapper */
+  .expanded-wrapper {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 320px;
+    max-width: 95vw;
+    max-height: 90vh;
+    height: 400px;
+    background: #0a1931;
+    border-radius: 20px;
+    box-shadow: 0 0 40px #003effcc, 0 5px 30px rgba(0,0,0,0.9);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+    z-index: 100;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    color: #d0e7ff;
+  }
+
+  .expanded-wrapper.visible {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  /* Close button */
+  .close-btn {
+    align-self: flex-end;
+    background: transparent;
+    border: none;
+    color: #a1d4ff;
+    font-size: 1.8rem;
+    cursor: pointer;
+    margin: 10px 15px 0 0;
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+  .close-btn:hover {
+    color: #ffffff;
+  }
+
+  /* Expanded planet big */
+  .expanded-planet {
+    flex-shrink: 0;
+    margin: 0 auto;
+    border-radius: 50%;
+    animation: rotatePlanet 15s linear infinite;
+    box-shadow: 0 0 40px #1a90ffcc;
+    position: relative;
+  }
+  .expanded-planet.world1 {
+    background: radial-gradient(circle at center, #ffb347, #ffcc33);
+    box-shadow: 0 0 30px #ffc300dd;
+  }
+  .expanded-planet.world2 {
+    background: radial-gradient(circle at center, #6fb3ff, #0055ff);
+    box-shadow: 0 0 40px #2a57ffdd;
+  }
+  .expanded-planet.world3 {
+    background: radial-gradient(circle at center, #ff6f91, #be264c);
+    box-shadow: 0 0 40px #e60039dd;
+  }
+  .expanded-planet.world4 {
+    background: radial-gradient(circle at center, #a6ffb0, #3aff3b);
+    box-shadow: 0 0 30px #27c927dd;
+  }
+  .expanded-planet.world5 {
+    background: radial-gradient(circle at center, #ff6ffc, #a733ff);
+    box-shadow: 0 0 40px #8a24ffdd;
+  }
+
+  .expanded-planet.size1 {
+    width: 220px;
+    height: 220px;
+  }
+  .expanded-planet.size2 {
+    width: 190px;
+    height: 190px;
+  }
+  .expanded-planet.size3 {
+    width: 210px;
+    height: 210px;
+  }
+  .expanded-planet.size4 {
+    width: 200px;
+    height: 200px;
+  }
+  .expanded-planet.size5 {
+    width: 180px;
+    height: 180px;
+  }
+
+  /* Orbits inside expanded planet */
+  .expanded-orbits {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .expanded-orbit {
+    position: absolute;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 50%;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+  }
+
+  .expanded-orbit.r1 {
+    width: 80px;
+    height: 80px;
+    margin-left: -40px;
+    margin-top: -40px;
+    animation-name: orbitRotate;
+    animation-duration: 12s;
+  }
+  .expanded-orbit.r2 {
+    width: 110px;
+    height: 110px;
+    margin-left: -55px;
+    margin-top: -55px;
+    animation-name: orbitRotateRev;
+    animation-duration: 18s;
+  }
+  .expanded-orbit.r3 {
+    width: 140px;
+    height: 140px;
+    margin-left: -70px;
+    margin-top: -70px;
+    animation-name: orbitRotate;
+    animation-duration: 22s;
+  }
+
+  /* Subdivision in expanded */
+  .expanded-subdivision {
+    position: absolute;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    box-shadow: 0 0 12px #fff;
+    top: 50%;
+    left: 50%;
+    margin-top: -8px;
+    margin-left: -8px;
+  }
+
+  /* Different colors for expanded subdivisions by world */
+  .expanded-world1 .expanded-subdivision {
+    background: #fff7d7;
+    box-shadow: 0 0 12px #fff7d7;
+  }
+  .expanded-world2 .expanded-subdivision {
+    background: #99d9ff;
+    box-shadow: 0 0 12px #99d9ff;
+  }
+  .expanded-world3 .expanded-subdivision {
+    background: #ff9cb0;
+    box-shadow: 0 0 12px #ff9cb0;
+  }
+  .expanded-world4 .expanded-subdivision {
+    background: #b8ffb2;
+    box-shadow: 0 0 12px #b8ffb2;
+  }
+  .expanded-world5 .expanded-subdivision {
+    background: #d489ff;
+    box-shadow: 0 0 12px #d489ff;
+  }
+
+  /* Subdivision positions with animations in expanded */
+  .expanded-world1 .expanded-orbit.r1 .expanded-subdivision:nth-child(1) {
+    animation: orbiting1Exp 12s linear infinite;
+    top: 50%; left: 100%; margin-top: -8px; margin-left: -8px;
+  }
+  .expanded-world1 .expanded-orbit.r1 .expanded-subdivision:nth-child(2) {
+    animation: orbiting1Exp 12s linear infinite;
+    animation-delay: 6s;
+    top: 100%; left: 50%; margin-top: -8px; margin-left: -8px;
+  }
+  .expanded-world1 .expanded-orbit.r2 .expanded-subdivision:nth-child(1) {
+    animation: orbiting6Exp 18s linear infinite;
+    top: 50%; left: 100%; margin-top: -8px; margin-left: -8px;
+  }
+
+  /* Use similar animations on expanded orbits with slower speed */
+  @keyframes orbiting1Exp {
+    0% { transform: rotate(0deg) translateX(40px) rotate(0deg);}
+    100% { transform: rotate(360deg) translateX(40px) rotate(-360deg);}
+  }
+  @keyframes orbiting6Exp {
+    0% { transform: rotate(0deg) translateX(55px) rotate(0deg);}
+    100% { transform: rotate(360deg) translateX(55px) rotate(-360deg);}
+  }
+
+  /* Add similar animations for other worlds expanded subdivisions as needed */
+
+  /* Content area inside expanded planet */
+  .expanded-content {
+    flex: 1;
+    margin: 15px 20px 30px 20px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #c9dcff;
+    text-align: center;
+  }
+
+  /* Scrollbar styling */
+  .expanded-content::-webkit-scrollbar {
+    width: 7px;
+  }
+  .expanded-content::-webkit-scrollbar-track {
+    background: #001832;
+    border-radius: 10px;
+  }
+  .expanded-content::-webkit-scrollbar-thumb {
+    background: #4a90e2;
+    border-radius: 10px;
+  }
+
+</style>
+</head>
+<body>
+  <h1>Mundos Planetas Animados</h1>
+
+  <div class="container" role="main">
+
+    <!-- World 1 -->
+    <section class="planet-world" aria-label="Mundo 1" data-world="1" tabindex="0" role="button">
+      <div class="world-title">Mundo 1</div>
+      <div class="planet world1 size1" aria-describedby="desc1" role="img" aria-label="Planeta dorado de Mundo 1">
+        <div class="orbits">
+          <div class="orbit r1 world1">
+            <div class="subdivision" data-info="Subdivisión A" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+            <div class="subdivision" data-info="Subdivisión B" style="top: 100%; left: 50%; margin-top: -6px; margin-left: -6px; animation-delay: 5s;"></div>
+          </div>
+          <div class="orbit r2 world1" style="animation-delay: 2s;">
+            <div class="subdivision" data-info="Subdivisión C" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- World 2 -->
+    <section class="planet-world" aria-label="Mundo 2" data-world="2" tabindex="0" role="button">
+      <div class="world-title">Mundo 2</div>
+      <div class="planet world2 size2" aria-describedby="desc2" role="img" aria-label="Planeta azul de Mundo 2">
+        <div class="orbits">
+          <div class="orbit r1 world2" style="animation-duration: 15s;">
+            <div class="subdivision" data-info="Subdivisión A" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+            <div class="subdivision" data-info="Subdivisión B" style="top: 100%; left: 50%; margin-top: -6px; margin-left: -6px; animation-delay: 7s;"></div>
+          </div>
+          <div class="orbit r2 world2" style="animation-delay: 1s;">
+            <div class="subdivision" data-info="Subdivisión C" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+            <div class="subdivision" data-info="Subdivisión D" style="top: 100%; left: 50%; margin-top: -6px; margin-left: -6px; animation-delay: 12s;"></div>
+          </div>
+          <div class="orbit r3 world2" style="animation-delay: 4s;">
+            <div class="subdivision" data-info="Subdivisión E" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- World 3 -->
+    <section class="planet-world" aria-label="Mundo 3" data-world="3" tabindex="0" role="button">
+      <div class="world-title">Mundo 3</div>
+      <div class="planet world3 size3" aria-describedby="desc3" role="img" aria-label="Planeta rojo de Mundo 3">
+        <div class="orbits">
+          <div class="orbit r1 world3">
+            <div class="subdivision" data-info="Subdivisión A" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+            <div class="subdivision" data-info="Subdivisión B" style="top: 100%; left: 50%; margin-top: -6px; margin-left: -6px; animation-delay: 8s;"></div>
+          </div>
+          <div class="orbit r2 world3" style="animation-delay: 3s;">
+            <div class="subdivision" data-info="Subdivisión C" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+            <div class="subdivision" data-info="Subdivisión D" style="top: 14%; left: 86%; margin-top: -6px; margin-left: -6px; animation-delay: 11s;"></div>
+          </div>
+          <div class="orbit r3 world3" style="animation-delay: 6s;">
+            <div class="subdivision" data-info="Subdivisión E" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+            <div class="subdivision" data-info="Subdivisión F" style="top: 86%; left: 14%; margin-top: -6px; margin-left: -6px; animation-delay: 17s;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- World 4 -->
+    <section class="planet-world" aria-label="Mundo 4" data-world="4" tabindex="0" role="button">
+      <div class="world-title">Mundo 4</div>
+      <div class="planet world4 size4" aria-describedby="desc4" role="img" aria-label="Planeta verde de Mundo 4">
+        <div class="orbits">
+          <div class="orbit r1 world4">
+            <div class="subdivision" data-info="Subdivisión A" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+            <div class="subdivision" data-info="Subdivisión B" style="top: 22%; left: 78%; margin-top: -6px; margin-left: -6px; animation-delay: 7s;"></div>
+          </div>
+          <div class="orbit r2 world4" style="animation-delay: 7s;">
+            <div class="subdivision" data-info="Subdivisión C" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+          </div>
+          <div class="orbit r3 world4" style="animation-delay: 13s;">
+            <div class="subdivision" data-info="Subdivisión D" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+            <div class="subdivision" data-info="Subdivisión E" style="top: 100%; left: 50%; margin-top: -6px; margin-left: -6px; animation-delay: 18s;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- World 5 -->
+    <section class="planet-world" aria-label="Mundo 5" data-world="5" tabindex="0" role="button">
+      <div class="world-title">Mundo 5</div>
+      <div class="planet world5 size5" aria-describedby="desc5" role="img" aria-label="Planeta violeta de Mundo 5">
+        <div class="orbits">
+          <div class="orbit r1 world5">
+            <div class="subdivision" data-info="Subdivisión A" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+          </div>
+          <div class="orbit r2 world5" style="animation-delay: 9s;">
+            <div class="subdivision" data-info="Subdivisión B" style="top: 50%; left: 100%; margin-top: -6px; margin-left: -6px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Expanded planet overlay container -->
+  <div id="expandedWrapper" class="expanded-wrapper" aria-modal="true" role="dialog" aria-hidden="true">
+    <button class="close-btn" aria-label="Cerrar vista ampliada">&times;</button>
+    <!-- Large planet duplicate -->
+    <div id="expandedPlanet" class="expanded-planet"></div>
+    <!-- Orbits with subdivisions inside expanded -->
+    <div id="expandedOrbits" class="expanded-orbits"></div>
+    <!-- Content for the world -->
+    <div id="expandedContent" class="expanded-content"></div>
+  </div>
+
+<script>
+  (function(){
+    const worldsData = {
+      1: {
+        title: "Mundo 1",
+        description: "Este es el contenido expandido para Mundo 1. Un planeta dorado lleno de misterios y subdivisiones que giran cual lunas en órbita.",
+        colorClass: "expanded-world1",
+        sizeClass: "size1",
+        subdivisions: [
+          { orbit: 'r1', delay: 0 },
+          { orbit: 'r1', delay: 6 },
+          { orbit: 'r2', delay: 0 }
+        ]
+      },
+      2: {
+        title: "Mundo 2",
+        description: "Contenido detallado para Mundo 2, un planeta azul vibrante con múltiples subdivisiones y misteriosos anillos orbitantes.",
+        colorClass: "expanded-world2",
+        sizeClass: "size2",
+        subdivisions: [
+          { orbit: 'r1', delay: 0 },
+          { orbit: 'r1', delay: 7 },
+          { orbit: 'r2', delay: 1 },
+          { orbit: 'r2', delay: 12 },
+          { orbit: 'r3', delay: 4 }
+        ]
+      },
+      3: {
+        title: "Mundo 3",
+        description: "Mundo 3 es un planeta rojo expressivo, con subdivisiones dinámicas que orbitan en armonía formando una sinfonía espacial.",
+        colorClass: "expanded-world3",
+        sizeClass: "size3",
+        subdivisions: [
+          { orbit: 'r1', delay: 0 },
+          { orbit: 'r1', delay: 8 },
+          { orbit: 'r2', delay: 3 },
+          { orbit: 'r2', delay: 11 },
+          { orbit: 'r3', delay: 6 },
+          { orbit: 'r3', delay: 17 }
+        ]
+      },
+      4: {
+        title: "Mundo 4",
+        description: "Un planeta verde lleno de vida y subdivisiones que bailan en órbitas lentas, dándole un aura de tranquilidad pero potencia.",
+        colorClass: "expanded-world4",
+        sizeClass: "size4",
+        subdivisions: [
+          { orbit: 'r1', delay: 0 },
+          { orbit: 'r1', delay: 7 },
+          { orbit: 'r2', delay: 7 },
+          { orbit: 'r3', delay: 13 },
+          { orbit: 'r3', delay: 18 }
+        ]
+      },
+      5: {
+        title: "Mundo 5",
+        description: "El planeta violeta, pequeño pero poderoso, con subdivisiones que giran en sus propios caminos místicos.",
+        colorClass: "expanded-world5",
+        sizeClass: "size5",
+        subdivisions: [
+          { orbit: 'r1', delay: 0 },
+          { orbit: 'r2', delay: 9 }
+        ]
+      }
+    };
+
+    const body = document.body;
+    const expandedWrapper = document.getElementById('expandedWrapper');
+    const expandedPlanet = document.getElementById('expandedPlanet');
+    const expandedOrbits = document.getElementById('expandedOrbits');
+    const expandedContent = document.getElementById('expandedContent');
+    const closeBtn = expandedWrapper.querySelector('.close-btn');
+
+    let currentExpandedWorld = null;
+
+    function clearExpanded() {
+      expandedPlanet.className = 'expanded-planet';
+      expandedOrbits.innerHTML = '';
+      expandedContent.textContent = '';
+      expandedWrapper.setAttribute('aria-hidden', 'true');
+      expandedWrapper.classList.remove('visible');
+      body.classList.remove('expanded');
+      currentExpandedWorld = null;
+    }
+
+    function createOrbit(subdivisions, worldClass) {
+      // we have 3 orbit rings fixed (r1, r2, r3)
+      const orbitRings = {
+        r1: 80,
+        r2: 110,
+        r3: 140
+      };
+
+      // Clear previous orbits
+      expandedOrbits.innerHTML = '';
+
+      // Create orbit rings dynamically if needed based on subdivisions
+      let usedOrbits = new Set(subdivisions.map(s => s.orbit));
+
+      usedOrbits.forEach(orbitName => {
+        const orbitDiv = document.createElement('div');
+        orbitDiv.className = `expanded-orbit ${orbitName}`;
+        expandedOrbits.appendChild(orbitDiv);
+      });
+
+      // Create subdivisions
+      subdivisions.forEach((sub, index) => {
+        // We'll find the orbitDiv element to append to
+        const orbitDiv = expandedOrbits.querySelector(`.${sub.orbit}`);
+
+        // Create subdivision dot inside orbit
+        const subDiv = document.createElement('div');
+        subDiv.className = 'expanded-subdivision';
+        // color class
+        expandedOrbits.classList.add(worldClass);
+
+        // Position and animate subdivision
+        subDiv.style.animationDuration = (orbitRings[sub.orbit] / 2) * 1 + 's'; // slower animation based on orbit size
+        subDiv.style.animationTimingFunction = 'linear';
+        subDiv.style.animationIterationCount = 'infinite';
+
+        // We reuse keyframes orbiting1Exp but with delay offset to spread around
+        let baseAnimation = 'orbiting1Exp';
+        switch(sub.orbit) {
+          case 'r1': baseAnimation = 'orbiting1Exp'; break;
+          case 'r2': baseAnimation = 'orbiting6Exp'; break;
+          case 'r3': baseAnimation = 'orbitRotate'; break;
+          default: baseAnimation = 'orbiting1Exp';
+        }
+        subDiv.style.animationName = baseAnimation;
+        subDiv.style.animationDelay = sub.delay + 's';
+
+        // Append subdivision dot to the correct orbit ring
+        orbitDiv.appendChild(subDiv);
+
+        // Position explicitly for r1 and r2 with animations offset (we rely on transform rotate animation)
+
+        // We do not set top/left here because animation handles movement,
+        // but we add initial position (will be rotated by animation)
+        if (sub.orbit === 'r1') {
+          subDiv.style.top = '50%';
+          subDiv.style.left = '100%';
+          subDiv.style.marginTop = '-8px';
+          subDiv.style.marginLeft = '-8px';
+        } else if (sub.orbit === 'r2') {
+          subDiv.style.top = '50%';
+          subDiv.style.left = '100%';
+          subDiv.style.marginTop = '-8px';
+          subDiv.style.marginLeft = '-8px';
+        } else if (sub.orbit === 'r3') {
+          subDiv.style.top = '50%';
+          subDiv.style.left = '100%';
+          subDiv.style.marginTop = '-8px';
+          subDiv.style.marginLeft = '-8px';
+        }
+      });
+    }
+
+    function openWorld(worldNum) {
+      const worldInfo = worldsData[worldNum];
+      if (!worldInfo) return;
+
+      currentExpandedWorld = worldNum;
+
+      // Set expanded wrapper visible
+      expandedWrapper.classList.add('visible');
+      expandedWrapper.setAttribute('aria-hidden', 'false');
+      body.classList.add('expanded');
+
+      // Setup planet classes
+      expandedPlanet.className = `expanded-planet world${worldNum} ${worldInfo.sizeClass}`;
+
+      // Create orbits and subdivisions inside expanded planet
+      createOrbit(worldInfo.subdivisions, worldInfo.colorClass);
+
+      // Set content
+      expandedContent.textContent = '';
+      const titleEl = document.createElement('h2');
+      titleEl.textContent = worldInfo.title;
+      titleEl.style.marginTop = '0';
+      titleEl.style.color = '#a1d4ff';
+      expandedContent.appendChild(titleEl);
+      const descEl = document.createElement('p');
+      descEl.textContent = worldInfo.description;
+      expandedContent.appendChild(descEl);
+
+      // Focus trap on close button for accessibility
+      closeBtn.focus();
+    }
+
+    function closeWorld() {
+      clearExpanded();
+      // Return focus to previously focused planet world if any
+      if(currentExpandedWorld){
+        const planetWorlds = document.querySelectorAll('.planet-world');
+        let idx = Array.from(planetWorlds).findIndex(e => e.getAttribute('data-world') == currentExpandedWorld);
+        if (idx >= 0) planetWorlds[idx].focus();
+      }
+    }
+
+    // Add event listeners on all planet worlds
+    const planetWorlds = document.querySelectorAll('.planet-world');
+    planetWorlds.forEach(pw => {
+      pw.addEventListener('click', () => {
+        const worldNum = pw.getAttribute('data-world');
+        openWorld(worldNum);
+      });
+      // keyboard accessibility - open on Enter or Space
+      pw.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const worldNum = pw.getAttribute('data-world');
+          openWorld(worldNum);
+        }
+      });
+    });
+
+    // Close button listener
+    closeBtn.addEventListener('click', closeWorld);
+
+    // Close expanded world on ESC key
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape' && body.classList.contains('expanded')){
+        closeWorld();
+      }
+    });
+
+    // Also close expanded on click outside expanded content area
+    expandedWrapper.addEventListener('click', (e) => {
+      if(e.target === expandedWrapper) {
+        closeWorld();
+      }
+    });
+
+  })();
+</script>
+
+</body>
+</html>
+
